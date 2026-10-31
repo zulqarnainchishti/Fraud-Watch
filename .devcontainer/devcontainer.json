@@ -1,12 +1,6 @@
 {
-  "name": "Hadoop HDFS Environment",
-  "image": "mcr.microsoft.com/devcontainers/python:1-3.10-bullseye",
-  "features": {
-    "ghcr.io/devcontainers/features/java:1": {
-      "version": "default",
-      "installMaven": false
-    }
-  },
+  "name": "Big Data HDFS Environment",
+  "image": "mcr.microsoft.com/devcontainers/java:1-11-bullseye",
   "postCreateCommand": "bash .devcontainer/setup-hadoop.sh",
   "customizations": {
     "vscode": {
