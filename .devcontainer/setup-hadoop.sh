@@ -1,13 +1,5 @@
 #!/bin/bash
 
-echo "=== Updating system & installing dependencies ==="
-sudo apt-get update && sudo apt-get install -y openssh-server openssh-client rsync wget
-
-echo "=== Configuring passwordless SSH ==="
-ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
-cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-chmod 0600 ~/.ssh/authorized_keys
-
 echo "=== Downloading and Extracting Hadoop 3.3.6 ==="
 wget -q https://dlcdn.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
 sudo tar -xzvf hadoop-3.3.6.tar.gz -C /usr/local/
@@ -15,16 +7,19 @@ sudo mv /usr/local/hadoop-3.3.6 /usr/local/hadoop
 sudo chown -R vscode:vscode /usr/local/hadoop
 
 echo "=== Setting Environment Variables ==="
-echo 'export JAVA_HOME=/usr/lib/jvm/default-java' >> ~/.bashrc
-echo 'export HADOOP_HOME=/usr/local/hadoop' >> ~/.bashrc
+JAVA_PATH=$(dirname $(dirname $(readlink -f $(which java))))
+echo "export JAVA_HOME=$JAVA_PATH" >> ~/.bashrc
+echo "export HADOOP_HOME=/usr/local/hadoop" >> ~/.bashrc
 echo 'export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin' >> ~/.bashrc
-export JAVA_HOME=/usr/lib/jvm/default-java
+
+export JAVA_HOME=$JAVA_PATH
 export HADOOP_HOME=/usr/local/hadoop
 export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
 
-echo "=== Updating Hadoop Configuration Files ==="
 echo "export JAVA_HOME=$JAVA_HOME" >> $HADOOP_HOME/etc/hadoop/hadoop-env.sh
+echo "localhost" > $HADOOP_HOME/etc/hadoop/workers
 
+echo "=== Updating Hadoop Configuration Files ==="
 # core-site.xml
 cat << 'EOF' > $HADOOP_HOME/etc/hadoop/core-site.xml
 <configuration>
@@ -55,6 +50,9 @@ EOF
 
 echo "=== Formatting HDFS NameNode ==="
 mkdir -p /usr/local/hadoop/data/namenode /usr/local/hadoop/data/datanode
-hdfs namenode -format -force
+$HADOOP_HOME/bin/hdfs namenode -format -force
+
+echo "=== Installing Python Libraries ==="
+pip install --no-cache-dir pyspark pandas duckdb scikit-learn matplotlib seaborn
 
 echo "=== Setup Complete! ==="
